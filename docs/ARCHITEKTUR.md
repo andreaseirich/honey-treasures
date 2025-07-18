@@ -12,6 +12,7 @@
 - **Zahlung:** Manuelle Zahlungsabwicklung (Überweisung, Barzahlung, PayPal)
 - **Admin-Backend:** Django Admin für Familienbetrieb
 - **Mobile-Optimierung:** Touch-optimierte Benutzeroberfläche, Responsive CSS, Performance-Optimierungen
+- **Logging:** Benutzeraktivitäten und Geräte-Labels werden ausschließlich in der Datenbank gespeichert (keine Logdateien)
 
 ## Systemübersicht
 
@@ -45,3 +46,4 @@ graph TD
 - Touch-optimierte Benutzeroberfläche mit 44px Touch-Targets
 - iOS-Zoom-Verhinderung und mobile Performance-Optimierungen
 - Live-System unter https://honey-treasures.com
+- **Benutzeraktivitäten und Geräte-Labels werden zur Sicherheit und Nachvollziehbarkeit ausschließlich in der Datenbank gespeichert**

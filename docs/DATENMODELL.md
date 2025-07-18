@@ -12,6 +12,9 @@
 - **Bestellung**: Kunde, Adresse, Gesamtpreis, Zahlungsart, Versandart, Status, Produkte
 - **BestellungProdukt**: Bestellung, Produkt, Menge, Einzelpreis
 - **Adresse**: Straße, Hausnummer, PLZ, Stadt, Land, Kunde
+- **Benutzeraktivität**: IP-Adresse, User-Agent, URL, Zeitstempel
+- **UserActivityLog**: Zeit, User-Label, Gerät, IP, Ort, User-Agent, Pfad, Aktion
+- **DeviceUserLabel**: Gerät, User-Label, First Seen
 
 ## Beziehungen (ER-Diagramm)
 
@@ -25,10 +28,13 @@ erDiagram
     Produkt }o--|| Kategorie : "gehört zu"
     Bestellung }o--|| Adresse : "wird geliefert an"
     Kunde ||--o{ Adresse : "hat"
+    Benutzeraktivität }o--|| Kunde : "optional zugeordnet"
+    UserActivityLog }o--|| DeviceUserLabel : "bezieht sich auf"
 ```
 
 ## Besonderheiten
 - Verfügbarkeit eines Produkts ergibt sich aus Honigbestand (Eimer-Mangel wird protokolliert, verhindert aber nicht die Bestellung)
 - Rabattlogik ab 7kg Honig
 - Bestellungen speichern IP-Adresse und Status
-- Übersetzbare Felder für Produktnamen, Beschreibungen, Kategorienamen 
+- Übersetzbare Felder für Produktnamen, Beschreibungen, Kategorienamen
+- Benutzeraktivitäten und Geräte-Labels werden zur Sicherheit und Nachvollziehbarkeit in der Datenbank gespeichert 

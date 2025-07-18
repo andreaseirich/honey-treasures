@@ -71,7 +71,8 @@
 ## 📊 **Monitoring & Logging**
 
 ### **Sicherheits-Logging**
-- **Benutzeraktivitäten**: Protokollierung von Benutzeraktionen
+- **Benutzeraktivitäten**: Protokollierung von Benutzeraktionen ausschließlich in der Datenbank (keine Logdateien)
+- **Geräte-Labels**: Geräte-Identifikation und Zuordnung werden in der Datenbank gespeichert
 - **Fehler-Tracking**: Django Error-Logging
 - **Performance-Monitoring**: Einfache Überwachung der Systemleistung
 - **Backup-Verifizierung**: Manuelle Überprüfung der Backup-Integrität
