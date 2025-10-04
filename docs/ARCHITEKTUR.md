@@ -10,7 +10,8 @@
 - **Datenbank:** SQLite für Familienbetrieb
 - **E-Mail:** SMTP für Bestellbestätigungen
 - **Zahlung:** Manuelle Zahlungsabwicklung (Überweisung, Barzahlung, PayPal)
-- **Admin-Backend:** Django Admin für Familienbetrieb
+- **Admin-System:** Erweiterte rollenbasierte Benutzerverwaltung mit Analytics Dashboard
+- **Middleware:** Spezialisierte Middleware für Wartungsmodus und Berechtigungen
 - **Mobile-Optimierung:** Touch-optimierte Benutzeroberfläche, Responsive CSS, Performance-Optimierungen
 - **Logging:** Benutzeraktivitäten und Geräte-Labels werden ausschließlich in der Datenbank gespeichert (keine Logdateien)
 
@@ -27,13 +28,22 @@ graph TD
     B --> E[E-Mail an Kunde & Admin]
     B --> O[Bestellübersicht]
     V -- Fehler --> C
-    A[Admin] -->|"Verwaltung"| D(Django Admin)
-    D --> DB[(Datenbank)]
+    
+    A[Admin] -->|"Verwaltung"| AS[Admin System]
+    AS --> RB[Rollenbasierte Berechtigungen]
+    AS --> AD[Analytics Dashboard]
+    AS --> UM[Benutzerverwaltung]
+    AS --> SE[System-Einstellungen]
+    AS --> WM[Wartungsmodus]
+    
+    AS --> DB[(Datenbank)]
     S --> DB
     W --> DB
     C --> DB
     B --> DB
     L --> DB
+    RB --> DB
+    AD --> DB
 ```
 
 ## Besonderheiten
@@ -46,4 +56,8 @@ graph TD
 - Touch-optimierte Benutzeroberfläche mit 44px Touch-Targets
 - iOS-Zoom-Verhinderung und mobile Performance-Optimierungen
 - Live-System unter https://honey-treasures.com
+- **Erweiterte Admin-Architektur**: Rollenbasierte Benutzerverwaltung mit granularen Berechtigungen
+- **Analytics Dashboard**: Echtzeit-Monitoring mit interaktiven Charts und Export-Funktionen
+- **Middleware-Architektur**: Spezialisierte Middleware für Wartungsmodus und Berechtigungsprüfung
+- **System-Einstellungen**: Zentrale Konfiguration aller System-Parameter
 - **Benutzeraktivitäten und Geräte-Labels werden zur Sicherheit und Nachvollziehbarkeit ausschließlich in der Datenbank gespeichert**

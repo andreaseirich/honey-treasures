@@ -323,7 +323,176 @@ def log_user_activity(request, action, details=None):
     logger.info(json.dumps(log_entry))
 ```
 
-## 8. Admin-Integration
+## 8. Erweiterte Admin-Architektur
+
+### Rollenbasierte Benutzerverwaltung
+```python
+class AdminUserProfile(models.Model):
+    """Erweitertes Admin-Benutzerprofil mit granularen Berechtigungen."""
+    
+    ROLE_CHOICES = [
+        ('super_admin', 'Super Admin'),
+        ('order_admin', 'Bestellungs Admin'),
+        ('product_admin', 'Produkt Admin'),
+        ('analytics_admin', 'Analytics Admin'),
+        ('settings_admin', 'Einstellungs Admin'),
+        ('custom', 'Benutzerdefiniert'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin_profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='custom')
+    is_active = models.BooleanField(default=True)
+    
+    # Granulare Berechtigungen
+    can_view_analytics = models.BooleanField(default=False)
+    can_manage_orders = models.BooleanField(default=False)
+    can_manage_products = models.BooleanField(default=False)
+    can_manage_customers = models.BooleanField(default=False)
+    can_manage_settings = models.BooleanField(default=False)
+    can_view_reports = models.BooleanField(default=False)
+    can_export_data = models.BooleanField(default=False)
+    can_access_system_logs = models.BooleanField(default=False)
+    can_manage_users = models.BooleanField(default=False)
+    can_backup_restore = models.BooleanField(default=False)
+    
+    def set_role_permissions(self):
+        """Setzt Berechtigungen basierend auf der Rolle."""
+        if self.role == 'super_admin':
+            # Alle Berechtigungen für Super Admin
+            for field in self._meta.fields:
+                if field.name.startswith('can_'):
+                    setattr(self, field.name, True)
+        elif self.role == 'order_admin':
+            self.can_manage_orders = True
+            self.can_manage_customers = True
+            self.can_view_reports = True
+            self.can_export_data = True
+```
+
+### Custom Admin Site mit Analytics
+```python
+class CustomAdminSite(admin.AdminSite):
+    """Eigene AdminSite mit Analytics Dashboard und erweiterten Funktionen."""
+    
+    def get_urls(self):
+        """Ergänzt eigene URLs für Analytics und Berichte."""
+        urls = super().get_urls()
+        custom_urls = [
+            path('analytics/', self.admin_view(self.analytics_view), name='analytics'),
+            path('reports/', self.admin_view(self.reports_view), name='reports'),
+            path('admin-profiles/', self.admin_view(self.admin_profiles_view), name='admin-profiles'),
+            path('settings/', self.admin_view(self.settings_view), name='settings'),
+        ]
+        return custom_urls + urls
+    
+    def analytics_view(self, request):
+        """Zeigt Analytics-Dashboard im Admin an."""
+        # Berechne Statistiken
+        total_orders = Bestellung.objects.count()
+        total_customers = Kunde.objects.count()
+        total_products = Produkt.objects.count()
+        
+        # Umsatz der letzten 30 Tage
+        from datetime import datetime, timedelta
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        recent_orders = Bestellung.objects.filter(bestelldatum__gte=thirty_days_ago)
+        revenue = sum(order.gesamtpreis for order in recent_orders)
+        
+        context = dict(
+            self.each_context(request),
+            title="Analytics Dashboard",
+            total_orders=total_orders,
+            total_customers=total_customers,
+            total_products=total_products,
+            revenue=revenue,
+        )
+        return TemplateResponse(request, "admin/analytics.html", context)
+```
+
+### System-Einstellungen Management
+```python
+class AdminSettings(models.Model):
+    """Zentrale System-Einstellungen für das Admin-System."""
+    
+    site_name = models.CharField(max_length=100, default="Honigschätze")
+    site_description = models.TextField(blank=True)
+    admin_email = models.EmailField(blank=True)
+    
+    # System-Einstellungen
+    maintenance_mode = models.BooleanField(default=False)
+    debug_mode = models.BooleanField(default=False)
+    analytics_enabled = models.BooleanField(default=True)
+    
+    # Bestellungen
+    max_orders_per_day = models.IntegerField(default=50)
+    low_stock_threshold = models.IntegerField(default=10)
+    
+    # E-Mail
+    email_notifications = models.BooleanField(default=True)
+    
+    # Backup
+    backup_frequency = models.CharField(
+        max_length=20,
+        choices=[('daily', 'Täglich'), ('weekly', 'Wöchentlich'), ('monthly', 'Monatlich')],
+        default='weekly'
+    )
+    
+    def save(self, *args, **kwargs):
+        # Stelle sicher, dass nur eine AdminSettings-Instanz existiert
+        if not self.pk and AdminSettings.objects.exists():
+            existing = AdminSettings.objects.first()
+            for field in self._meta.fields:
+                if field.name not in ['id', 'created_at', 'updated_at']:
+                    setattr(existing, field.name, getattr(self, field.name))
+            existing.save()
+            return existing
+        return super().save(*args, **kwargs)
+```
+
+### Spezialisierte Middleware
+```python
+class MaintenanceModeMiddleware:
+    """Middleware für System-weiten Wartungsmodus."""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Prüfe Wartungsmodus in AdminSettings
+        try:
+            settings = AdminSettings.objects.first()
+            if settings and settings.maintenance_mode:
+                # Erlaube Admin-Zugriff
+                if not request.path.startswith('/admin/') and not request.user.is_staff:
+                    return HttpResponse(
+                        "System wird gewartet. Bitte versuchen Sie es später erneut.",
+                        status=503
+                    )
+        except:
+            pass  # Fallback bei Fehlern
+        
+        return self.get_response(request)
+
+class AdminPermissionsMiddleware:
+    """Middleware für rollenbasierte Admin-Berechtigungen."""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        if request.path.startswith('/admin/') and request.user.is_authenticated:
+            # Prüfe Admin-Berechtigungen
+            try:
+                profile = request.user.admin_profile
+                if not profile.is_active:
+                    return HttpResponse("Zugriff verweigert: Inaktives Admin-Profil", status=403)
+            except:
+                # Fallback für Benutzer ohne Admin-Profil
+                if not request.user.is_superuser:
+                    return HttpResponse("Zugriff verweigert: Kein Admin-Profil", status=403)
+        
+        return self.get_response(request)
+```
 
 ### Erweiterte Django Admin-Konfiguration
 ```python
@@ -345,6 +514,50 @@ class BestellungAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 ```
 
+## 9. Robuste Fehlerbehandlung
+
+### Defensive Programmierung in Views
+```python
+class ProduktListView(ListView):
+    def get_queryset(self):
+        try:
+            # Vereinfachte Abfrage ohne problematische Felder
+            queryset = Produkt.objects.all()
+            search_query = self.request.GET.get('search', '')
+            if search_query:
+                queryset = queryset.filter(
+                    models.Q(produktname__icontains=search_query) |
+                    models.Q(beschreibung__icontains=search_query)
+                )
+            # ... weitere Filter
+            return queryset
+        except Exception as e:
+            # Logge den Fehler für Debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Fehler in ProduktListView.get_queryset(): {str(e)}")
+            # Fallback: Alle Produkte ohne Filter
+            return Produkt.objects.all()
+
+    def get_context_data(self, **kwargs):
+        try:
+            context = super().get_context_data(**kwargs)
+            context['kategorien'] = Kategorie.objects.all()
+            cart = get_cart(self.request)
+            context['warenkorb_anzahl'] = sum(cart.values())
+            return context
+        except Exception as e:
+            # Logge den Fehler für Debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Fehler in ProduktListView.get_context_data(): {str(e)}")
+            # Fallback: Minimaler Kontext
+            context = super().get_context_data(**kwargs)
+            context['kategorien'] = []
+            context['warenkorb_anzahl'] = 0
+            return context
+```
+
 ## Technische Highlights
 
 ### Komplexität & Qualität
@@ -353,11 +566,17 @@ class BestellungAdmin(admin.ModelAdmin):
 - **Internationalisierung**: Mehrsprachigkeit mit Django ModelTranslation
 - **Sicherheit**: CSRF-Schutz und SSL-Verschlüsselung
 - **E-Mail-System**: HTML-Templates für Bestellbestätigungen
-- **Admin**: Django Admin für Familienbetrieb
+- **Admin-System**: Rollenbasierte Benutzerverwaltung mit Analytics Dashboard
+- **Middleware-Architektur**: Spezialisierte Middleware für Wartung und Berechtigungen
+- **Fehlerbehandlung**: Defensive Programmierung mit Fallback-Mechanismen
+- **System-Einstellungen**: Zentrale Konfiguration aller System-Parameter
 
 ### Bewährte Praktiken
 - **DRY-Prinzip**: Wiederverwendbare Funktionen
 - **Separation of Concerns**: Klare Trennung von Logik
-- **Error Handling**: Umfassende Fehlerbehandlung
+- **Error Handling**: Umfassende Fehlerbehandlung mit Logging
 - **Documentation**: Ausführliche Docstrings
 - **Type Hints**: Klare Funktionssignaturen
+- **Defensive Programming**: Try-catch Blöcke mit Fallback-Mechanismen
+- **Role-Based Access Control**: Granulare Berechtigungen
+- **Middleware Pattern**: Modulare Request-Processing-Pipeline

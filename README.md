@@ -58,6 +58,9 @@
 - **Bestellungsverwaltung**: Umfassende Übersicht und Status-Management für Familienbetrieb
 - **Kundenverwaltung**: Kundenprofile und Bestellhistorie
 - **E-Mail-System**: Automatische Benachrichtigungen an Kunden und Familienbetrieb
+- **Analytics Dashboard**: Echtzeit-Überwachung mit interaktiven Charts und Berichten
+- **Rollenverwaltung**: Granulare Benutzerberechtigungen mit 5 verschiedenen Admin-Rollen
+- **System-Einstellungen**: Zentrale Konfiguration von Wartungsmodus, Backup und Benachrichtigungen
 
 ---
 
@@ -80,6 +83,8 @@
 - **Django 5.x** - Web-Framework mit MVT-Architektur (automatisch aktualisiert)
 - **django-modeltranslation** - Mehrsprachige Datenmodelle
 - **SQLite** - Datenbank für Familienbetrieb
+- **Custom Admin System** - Rollenbasierte Benutzerverwaltung mit Analytics
+- **Middleware Architecture** - Spezialisierte Middleware für Wartung und Berechtigungen
 
 ### **Frontend**
 - **HTML5, CSS3, JavaScript** - Moderne Web-Standards
@@ -120,8 +125,27 @@
 
 ---
 
-## ⚙️ **Admin-Backend**
+## ⚙️ **Erweiterte Admin-System**
 
+### **Rollenbasierte Benutzerverwaltung**
+- **Multi-Rollen-System**: Super Admin, Bestellungs Admin, Produkt Admin, Analytics Admin, Einstellungs Admin
+- **Granulare Berechtigungen**: 10+ spezifische Berechtigungen pro Rolle
+- **Admin-Profile**: Erweiterte Benutzerprofile mit Rollen-Management
+- **Benutzerverwaltung**: Vollständige CRUD-Operationen für Admin-Benutzer
+
+### **Analytics & Reporting Dashboard**
+- **Live-Dashboard**: Echtzeit-Analytics mit interaktiven Charts
+- **Berichte**: Umfassende Berichte mit Excel/PDF-Export
+- **Produktverwaltung**: Grafische Produktverwaltung mit Kategorisierung
+- **System-Monitoring**: Erweiterte Logs und Performance-Tracking
+
+### **System-Einstellungen & Wartung**
+- **Wartungsmodus**: System-weite Wartungsmodus-Funktionalität
+- **Admin-Einstellungen**: Zentrale Konfiguration aller System-Parameter
+- **Backup-Management**: Automatisierte Backup-Strategien
+- **E-Mail-Benachrichtigungen**: Konfigurierbare Benachrichtigungssysteme
+
+### **Klassische Django Admin Features**
 - **Django Admin**: Umfassende Verwaltung aller Daten (Honigsorten, Produkte, Bestellungen, Kunden)
 - **Übersetzbare Felder**: Direkte Bearbeitung mehrsprachiger Inhalte im Admin
 - **Erweiterte Funktionen**: Filter, Suche, Inline-Bearbeitung
@@ -230,6 +254,7 @@ Für eine vollständige technische und fachliche Dokumentation siehe den Ordner 
 - **ARCHITEKTUR.md**: Systemarchitektur und Komponenten
 - **DATENMODELL.md**: Datenmodell und Beziehungen
 - **USE_CASES.md**: Nutzer- und Admin-Szenarien
+- **ADMIN_SYSTEM.md**: Erweiterte Admin-Architektur und Rollenverwaltung
 
 ### **Technische Implementierung**
 - **CODE_EXAMPLES.md**: Ausgewählte Code-Beispiele mit komplexer Geschäftslogik
